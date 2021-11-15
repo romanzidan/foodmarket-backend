@@ -97,4 +97,26 @@ class UserController extends Controller
 
         return ResponseFormatter::success($token, 'Token Revoked');
     }
+
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $this->validate($request, [
+                'email' => 'string|email|max:255|unique:users,email,'.$user->id,
+            ]);
+
+            $data = $request->all();
+            
+            $user->update($data);
+    
+            return ResponseFormatter::success($user, 'Profile Updated');
+        } catch (Exception $error) {
+            return ResponseFormatter::error([
+                'message' => 'Something went wrong',
+                'error' => $error
+            ], 'Update Failed', 500);
+        }
+    }
 }

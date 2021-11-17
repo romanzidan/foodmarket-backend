@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -42,7 +43,9 @@ class UserController extends Controller
     {
         $data = $request->all();
 
-        $data['picturePath'] = $request->file('picturePath')->store('assets/user', 'public');
+        $data['profile_photo_path'] = $request->file('picturePath')->store('assets/user', 'public');
+
+        $data['password'] = Hash::make($request->password);
 
         User::create($data);
 
@@ -66,9 +69,11 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(User $user)
     {
-        //
+        return view('users.edit',[
+            'item' => $user
+        ]);
     }
 
     /**
@@ -78,9 +83,24 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        //
+        $this->validate($request, [
+            'email' => 'string|email|max:255|unique:users,email,'.$user->id,
+        ]);
+
+        $data = $request->all();
+
+        if($request->file('picturePath'))
+        {
+            $data['profile_photo_path'] = $request->file('picturePath')->store('assets/user', 'public');
+        }
+
+        $data['password'] = Hash::make($request->password);
+
+        $user->update($data);
+
+        return redirect()->route('users.index');
     }
 
     /**
